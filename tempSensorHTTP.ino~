@@ -13,9 +13,6 @@ char ssid[32] = "";
 char password[32] = "";
 char sensorName[32] = "";
 
-//key used by web server to prevent unnecessary http requests
-const String server_password = "";
-
 const int httpPort = 80;
 const char* host = "162.243.16.83";
 
@@ -104,8 +101,7 @@ void loop() {
     url += temp;
     url += "&humidity=";
     url += humidity;
-    url += "&key=";
-    url += server_password;
+    url += "&key=esp1234";
     url += "&location=";
     url += sensorName;
 
