@@ -103,6 +103,12 @@ void loop() {
     }
   }
   else{
+    
+    if(WiFi.status() != WL_CONNECTED){
+      delay(10000);
+      ESP.restart();
+    }
+    
     if (!client.connect(host, httpPort)) {
       return;
     }
