@@ -45,7 +45,8 @@ void setup() {
   Serial.begin(115200);
   
   delay(1000);
-  
+
+  //load information from EEPROM
   loadCredentials();
   
   //try to connect to access point
@@ -58,6 +59,7 @@ void setup() {
   
   Serial.println("Connecting");
 
+  //wait 10 seconds for connection
   for (int i = 0; WiFi.status() != WL_CONNECTED && i <10; i++){
     Serial.print(".");
     delay(1000);
@@ -93,17 +95,20 @@ void loop() {
   if (!connected){
     dnsServer.processNextRequest();
     server.handleClient();
+
+    //start a counter - will reset device if in config mode for 10 seconds
     delay(1);
     access_point_timer++;
-
     if(access_point_timer > 600000){
       Serial.println("Uptime too long: Restarting");
       ESP.restart();
     }
   }
   else{
-    
+
+    //will restart device if WiFi connection is lost
     if(WiFi.status() != WL_CONNECTED){
+      Serial.println("Connection lost - Restarting in 10 seconds");
       delay(10000);
       ESP.restart();
     }

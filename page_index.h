@@ -14,7 +14,7 @@ const char page_index[] PROGMEM = R"=====(
 		      <form action="config" method="post" class="form-signin">
 		        <h2 class="form-signin-heading center">Sensor Config</h2>
 		        <label for="inputSSID" class="sr-only">Access Point SSID</label>
-		        <input name="ssid" type="email" id="inputSSID" class="form-control" placeholder="SSID" required autofocus>
+		        <input name="ssid" type="text" id="inputSSID" class="form-control" placeholder="SSID" required autofocus>
             <br>
 		        <label for="inputPassword" class="sr-only">Password</label>
 		        <input name="password" type="password" id="inputPassword" class="form-control" placeholder="Password" required>
