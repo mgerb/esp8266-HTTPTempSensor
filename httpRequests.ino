@@ -1,29 +1,13 @@
 void handleRoot(){
-    if(SPIFFS.exists("/index.html")){
-
-      File file = SPIFFS.open("/index.html", "r");
-
-      server.streamFile(file, "text/html");
-
-      file.close();
-    }
-    else{
-      server.send(404, "file doesn't exist");
-    } 
+    
+    server.send(200, "text/html", page_index);
+    
 }
 
 void handleBootstrap(){
-    if(SPIFFS.exists("/bootstrap.min.css")){
-
-      File file = SPIFFS.open("/bootstrap.min.css", "r");
-
-      server.streamFile(file, "text/css");
-
-      file.close();
-    }
-    else{
-      server.send(404, "file doesn't exist");
-    }
+  
+    server.send(200, "text/css", page_bootstrap);
+    
 }
 
 void handleConfig(){
@@ -46,31 +30,11 @@ void handleConfig(){
 }
 
 void handleCss(){
-    if(SPIFFS.exists("/style.css")){
-
-      File file = SPIFFS.open("/style.css", "r");
-
-      server.streamFile(file, "text/css");
-
-      file.close();
-    }
-    else{
-      server.send(404, "file doesn't exist");
-    }
+    server.send(200, "text/css", page_css);
 }
 
 void handleNotFound(){
-    if(SPIFFS.exists("/index.html")){
-
-      File file = SPIFFS.open("/index.html", "r");
-
-      server.streamFile(file, "text/html");
-
-      file.close();
-    }
-    else{
-      server.send(404, "file doesn't exist");
-    }
+    server.send(404, "text/html", "404");
 }
 
 /** Store WLAN credentials to EEPROM */
