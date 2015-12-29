@@ -9,7 +9,10 @@
 #include "page_css.h"
 #include "page_index.h"
 
-DHT dht(5, DHT11);
+#define DHTTYPE DHT11
+#define DHTPIN 5
+
+DHT dht(DHTPIN, DHTTYPE, 11);
 
 char ssid[32] = "";
 char password[32] = "";
@@ -19,9 +22,12 @@ char sensorName[32] = "";
 const String server_password = "esp1234";
 
 const int httpPort = 80;
-const char* host = "162.243.16.83";
+const char* host = "www.mitchellg.me";
 
 boolean connected;
+
+//count to restart if access point has been up for too long
+int access_point_timer = 0;
 
 // DNS server
 const byte DNS_PORT = 53;
@@ -88,15 +94,41 @@ void loop() {
   if (!connected){
     dnsServer.processNextRequest();
     server.handleClient();
+    delay(1);
+    access_point_timer++;
+
+    if(access_point_timer > 600000){
+      Serial.println("Uptime too long: Restarting");
+      ESP.restart();
+    }
   }
   else{
     if (!client.connect(host, httpPort)) {
       return;
     }
-  
-    float temp = dht.readTemperature(true);
-    float humidity = dht.readHumidity();
 
+    boolean bad_reading = true;
+    float temp = 0, humidity = 0;
+    
+    while (bad_reading == true){
+      
+      temp = dht.readTemperature(true);
+      humidity = dht.readHumidity();
+
+      if (isnan(temp) || isnan(humidity)){
+        bad_reading == true;
+      }
+      else {
+        bad_reading = false;
+        break;
+      }
+
+      delay(2000);
+      Serial.println("bad reading");
+    }
+    
+    delay(1000);
+    
     // We now create a URI for the request
     String url = "/temperature";
     url += "?temperature=";
@@ -114,14 +146,14 @@ void loop() {
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" + 
                "Connection: close\r\n\r\n");
-    delay(100);
+    delay(1000);
     
     while(client.available()){
       String line = client.readStringUntil('\r');
       Serial.print("Response: " + line);
     }
     
-    delay(120000);
+    delay(60000);
     //ESP.deepSleep(120 * 1000000, WAKE_RF_DEFAULT);
   }
 }
