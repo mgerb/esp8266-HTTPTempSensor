@@ -19,7 +19,7 @@ char password[32] = "";
 char sensorName[32] = "";
 
 //key used by web server to prevent unnecessary http requests
-const String server_password = "esp1234";
+const String server_password = "";
 
 const int httpPort = 80;
 const char* host = "www.mitchellg.me";
