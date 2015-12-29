@@ -4,12 +4,6 @@ void handleRoot(){
     
 }
 
-void handleBootstrap(){
-  
-    server.send(200, "text/css", page_bootstrap);
-    
-}
-
 void handleConfig(){
   
   if (server.arg("password") != "" && server.arg("ssid") != "" && server.arg("name") != ""){
@@ -27,10 +21,6 @@ void handleConfig(){
   }
 
   server.send(200, "text/html", "<script>window.onload = function() { window.location = \"/\"; }</script>");
-}
-
-void handleCss(){
-    server.send(200, "text/css", page_css);
 }
 
 void handleNotFound(){

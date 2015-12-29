@@ -5,8 +5,7 @@
 #include <ESP8266mDNS.h>
 #include <EEPROM.h>
 #include <DHT.h>
-#include "page_bootstrap.h"
-#include "page_css.h"
+
 #include "page_index.h"
 
 #define DHTTYPE DHT11
