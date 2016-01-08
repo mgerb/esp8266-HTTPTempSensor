@@ -21,7 +21,7 @@ char sensorName[32] = "";
 const String server_password = "";
 
 const int httpPort = 80;
-const char* host = "www.mitchellg.me";
+const char* host = "www.mitchel.io";
 
 boolean connected;
 
