@@ -133,7 +133,7 @@ void loop() {
         break;
       }
 
-      delay(2000);
+      delay(7000);
       Serial.println("bad reading");
     }
     
