@@ -8,7 +8,7 @@
 #include "page_index.h"
 
 #define DHTTYPE DHT11
-#define DHTPIN 4
+#define DHTPIN 5
 
 DHT dht(DHTPIN, DHTTYPE, 11);
 
@@ -19,6 +19,7 @@ char serverPassword[32] = "";
 
 const int httpPort = 80;
 const char* host = "www.mitchel.io";
+const char* ap_password = "thereisnospoon";
 
 boolean connected;
 
@@ -76,7 +77,7 @@ void setup() {
     
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, netMsk);
-    WiFi.softAP("Sensor Config");
+    WiFi.softAP("Sensor Config", ap_password);
    
     delay(500);
     
