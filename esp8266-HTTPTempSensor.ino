@@ -4,21 +4,22 @@
 #include <DNSServer.h>
 #include <ESP8266mDNS.h>
 #include <EEPROM.h>
-#include <DHT.h>
-
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "page_index.h"
 
-#define DHTTYPE DHT11
-#define DHTPIN 5
+// Data wire is plugged into port 4 on the ESP8266
+#define ONE_WIRE_BUS 4
+#define TEMPERATURE_PRECISION 9
 
-DHT dht(DHTPIN, DHTTYPE, 11);
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+DeviceAddress deviceAddress;
 
 char ssid[32] = "";
 char password[32] = "";
 char sensorName[32] = "";
-
-//key used by web server to prevent unnecessary http requests
-const String server_password = "";
+char serverPassword[32] = "";
 
 const int httpPort = 80;
 const char* host = "www.mitchel.io";
@@ -39,6 +40,14 @@ WiFiClient client;
 /* Soft AP network parameters */
 IPAddress apIP(192, 168, 1, 1);
 IPAddress netMsk(255, 255, 255, 0);
+
+//function prototypes ----------
+void handleRoot();
+void handleConfig();
+void handleNotFound();
+void saveConfig();
+void loadCredentials();
+//------------------------------
 
 void setup() {
   // put your setup code here, to run once:
@@ -71,7 +80,7 @@ void setup() {
     
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, netMsk);
-    WiFi.softAP("Sensor Config");
+    WiFi.softAP("Sensor Config", "thereisnospoon");
    
     delay(500);
     
@@ -85,7 +94,10 @@ void setup() {
   else{
     connected = true;
     WiFi.mode(WIFI_STA);
-    dht.begin();
+    
+    sensors.begin();
+    sensors.getAddress(deviceAddress, 0);
+    sensors.setResolution(deviceAddress, TEMPERATURE_PRECISION);
   }
   
 }
@@ -105,7 +117,6 @@ void loop() {
     }
   }
   else{
-
     //will restart device if WiFi connection is lost
     if(WiFi.status() != WL_CONNECTED){
       Serial.println("Connection lost - Restarting in 10 seconds");
@@ -118,14 +129,13 @@ void loop() {
     }
 
     boolean bad_reading = true;
-    float temp = 0, humidity = 0;
+    float temp = 0;
     
     while (bad_reading == true){
-      
-      temp = dht.readTemperature(true);
-      humidity = dht.readHumidity();
+      sensors.requestTemperatures();
+      temp = sensors.getTempF(deviceAddress);
 
-      if (isnan(temp) || isnan(humidity)){
+      if (isnan(temp)){
         bad_reading == true;
       }
       else {
@@ -133,7 +143,7 @@ void loop() {
         break;
       }
 
-      delay(7000);
+      delay(5000);
       Serial.println("bad reading");
     }
     
@@ -143,10 +153,8 @@ void loop() {
     String url = "/temperature";
     url += "?temperature=";
     url += temp;
-    url += "&humidity=";
-    url += humidity;
     url += "&key=";
-    url += server_password;
+    url += serverPassword;
     url += "&location=";
     url += sensorName;
 
@@ -164,6 +172,60 @@ void loop() {
     }
     
     delay(60000);
-    //ESP.deepSleep(120 * 1000000, WAKE_RF_DEFAULT);
   }
 }
+
+void handleRoot(){
+    server.send(200, "text/html", page_index);  
+}
+
+void handleConfig(){
+  
+  if (server.arg("password") != "" && server.arg("ssid") != "" && server.arg("name") != "" && server.arg("serverPassword") != ""){
+   
+    server.arg("ssid").toCharArray(ssid, sizeof(ssid) -1);
+    server.arg("password").toCharArray(password, sizeof(password) -1);
+    server.arg("name").toCharArray(sensorName, sizeof(sensorName) -1);
+    server.arg("serverPassword").toCharArray(serverPassword, sizeof(serverPassword) -1);
+    
+    saveConfig();
+
+    server.send(200, "text/html", "Config successful. Rebooting");
+
+    ESP.restart();
+  }
+
+  server.send(200, "text/html", "<script>window.onload = function() { window.location = \"/\"; }</script>");
+}
+
+void handleNotFound(){
+    server.send(404, "text/html", "404");
+}
+
+/** Store WLAN credentials to EEPROM */
+void saveConfig() {
+  EEPROM.begin(512);
+  EEPROM.put(0, ssid);
+  EEPROM.put(0+sizeof(ssid), password);
+  EEPROM.put(0+sizeof(ssid)+sizeof(password), sensorName);
+  EEPROM.put(0+sizeof(ssid)+sizeof(password)+sizeof(sensorName), serverPassword);
+  EEPROM.commit();
+  EEPROM.end();
+  
+}
+
+void loadCredentials() {
+  EEPROM.begin(512);
+  EEPROM.get(0, ssid);
+  EEPROM.get(0+sizeof(ssid), password);
+  EEPROM.get(0+sizeof(ssid)+sizeof(password), sensorName);
+  EEPROM.get(0+sizeof(ssid)+sizeof(password)+sizeof(sensorName), serverPassword);
+  EEPROM.end();
+  
+  Serial.println("Recovered credentials:");
+  Serial.println(ssid);
+  Serial.println(password);
+  Serial.println(sensorName);
+  Serial.println(serverPassword);
+}
+

@@ -22,6 +22,9 @@ const char page_index[] PROGMEM = R"=====(
 		        <label for="inputName" class="sr-only">Sensor Name</label>
 		        <input name="name" type="text" id="inputName" class="form-control" placeholder="Sensor Name" required>
             <br>
+            <label for"inputServerPassword" class="sr-only">Server Password</label>
+            <input name="serverPassword" type="password" id="inputServerPassword" class="form-control" placeholder="Server Password" required>
+		        <br>
 		        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
 		      </form>
 	  	
