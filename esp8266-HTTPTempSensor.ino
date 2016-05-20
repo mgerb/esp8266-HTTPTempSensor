@@ -22,7 +22,8 @@ char sensorName[32] = "";
 char serverPassword[32] = "";
 
 const int httpPort = 80;
-const char* host = "www.mitchel.io";
+const char* host = "mitchel.io";
+const char* ap_password = "thereisnospoon";
 
 boolean connected;
 
@@ -80,7 +81,7 @@ void setup() {
     
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, netMsk);
-    WiFi.softAP("Sensor Config", "thereisnospoon");
+    WiFi.softAP("Sensor Config", ap_password);
    
     delay(500);
     
@@ -175,6 +176,7 @@ void loop() {
   }
 }
 
+
 void handleRoot(){
     server.send(200, "text/html", page_index);  
 }
@@ -228,4 +230,3 @@ void loadCredentials() {
   Serial.println(sensorName);
   Serial.println(serverPassword);
 }
-
