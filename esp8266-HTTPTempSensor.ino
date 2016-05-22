@@ -173,7 +173,7 @@ void sendData() {
   }
 
   // We now create a URI for the request
-  String url = "/temperature";
+  String url = "/api/storedata";
   url += "?temperature=";
   url += temp;
   url += "&key=";
