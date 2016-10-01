@@ -19,15 +19,15 @@ const char page_index[] PROGMEM = R"=====(
             <label for="inputPassword" class="sr-only">Password</label>
             <input name="password" type="password" id="inputPassword" class="form-control" placeholder="Password" required>
             <br>
-            <label for="inputName" class="sr-only">Sensor Name</label>
-            <input name="name" type="text" id="inputName" class="form-control" placeholder="Sensor Name" required>
+            <label for"inputServerAddress" class="sr-only">Server Address</label>
+            <input name="serverAddress" type="text" id="inputServerAddress" class="form-control" placeholder="Server Address" required>
             <br>
             <label for"inputServerPassword" class="sr-only">Server Password</label>
             <input name="serverPassword" type="password" id="inputServerPassword" class="form-control" placeholder="Server Password" required>
-            <br>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
-          </form>
-      
+		        <br>
+		        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
+		      </form>
+	  	
 
     </div> <!-- /container -->
 
