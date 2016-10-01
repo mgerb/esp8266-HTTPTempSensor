@@ -15,16 +15,19 @@ const char page_index[] PROGMEM = R"=====(
             <h2 class="form-signin-heading center">Sensor Config</h2>
             <label for="inputSSID" class="sr-only">Access Point SSID</label>
             <input name="ssid" type="text" id="inputSSID" class="form-control" placeholder="SSID" required autofocus>
-            <br>
+            <br/>
             <label for="inputPassword" class="sr-only">Password</label>
             <input name="password" type="password" id="inputPassword" class="form-control" placeholder="Password" required>
-            <br>
+            <br/>
             <label for"inputServerAddress" class="sr-only">Server Address</label>
             <input name="serverAddress" type="text" id="inputServerAddress" class="form-control" placeholder="Server Address" required>
-            <br>
+            <br/>
             <label for"inputServerPassword" class="sr-only">Server Password</label>
             <input name="serverPassword" type="password" id="inputServerPassword" class="form-control" placeholder="Server Password" required>
-		        <br>
+		        <br/>
+            <label for="inputName" class="sr-only">Sensor Name</label>
+            <input name="name" type="text" id="inputName" class="form-control" placeholder="Sensor Name" required>
+            <br/>
 		        <button class="btn btn-lg btn-primary btn-block" type="submit">Submit</button>
 		      </form>
 	  	

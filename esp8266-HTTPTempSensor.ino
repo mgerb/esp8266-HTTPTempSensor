@@ -8,8 +8,8 @@
 #include <DallasTemperature.h>
 #include "page_index.h"
 
-// Data wire is plugged into port 4 on the ESP8266
-#define ONE_WIRE_BUS 4
+// Pin D5 on mini nodeMCU
+#define ONE_WIRE_BUS 14
 #define TEMPERATURE_PRECISION 9
 
 OneWire oneWire(ONE_WIRE_BUS);
@@ -22,10 +22,12 @@ char sensorName[32] = "";
 char serverPassword[32] = "";
 char serverAddress[32] = "";
 
-int sendTimer = millis();
+//timeout for sending temperature data
+const int sendTimeout = 180000;
+int sendTimer = 0;
 
 //time before restart access point
-const int timeout = 120000;
+const int resetTimeout = 120000;
 
 const int httpPort = 80;
 const char *ap_password = "thereisnospoon";
@@ -93,7 +95,7 @@ void setup()
       dnsServer.processNextRequest();
       server.handleClient();
 
-      if (timer + timeout < millis())
+      if (timer + resetTimeout < millis())
       {
         Serial.println("restarting");
         ESP.restart();
@@ -116,11 +118,14 @@ void loop()
   //will restart device if WiFi connection is lost
   if (WiFi.status() != WL_CONNECTED)
   {
+    Serial.println("Disconnected... Restarting");
+    delay(5000);
     ESP.restart();
   }
 
-  if (millis() > sendTimer + 300000)
+  if (millis() > sendTimer + sendTimeout)
   {
+    Serial.println("Sending data to server...");
     sendData();
     sendTimer = millis();
   }
