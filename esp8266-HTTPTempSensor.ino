@@ -1,4 +1,3 @@
-
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -23,12 +22,13 @@ char sensorName[32] = "";
 char serverPassword[32] = "";
 char serverAddress[32] = "";
 
-int sendTimer = millis(), reconnectTimer = millis();
+int sendTimer = millis();
+
+//time before restart access point
+const int timeout = 120000;
 
 const int httpPort = 80;
-const char* ap_password = "thereisnospoon";
-
-boolean connected;
+const char *ap_password = "thereisnospoon";
 
 // DNS server
 const byte DNS_PORT = 53;
@@ -51,7 +51,8 @@ void loadCredentials();
 void sendData();
 //------------------------------
 
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
   Serial.begin(115200);
 
@@ -65,15 +66,13 @@ void setup() {
   Serial.println("Connecting...");
 
   int connRes = WiFi.waitForConnectResult();
-  Serial.print ( "connRes: " );
-  Serial.println ( connRes );
-  
+  Serial.print("connRes: ");
+  Serial.println(connRes);
+
   //if connected skip setting up access point
-  if (WiFi.status() != WL_CONNECTED) {
-
+  if (WiFi.status() != WL_CONNECTED)
+  {
     Serial.println("Unable to connect: Setting up access point");
-
-    connected = false;
 
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, netMsk);
@@ -85,85 +84,75 @@ void setup() {
 
     dnsServer.start(DNS_PORT, "*", apIP);
     server.begin();
-    
-  }
-  else {
-    
-    Serial.print("Connected to: ");
-    Serial.println(ssid);
 
-    connected = true;
-    WiFi.mode(WIFI_STA);
+    int timer = millis();
 
-    sensors.begin();
-    sensors.getAddress(deviceAddress, 0);
-    sensors.setResolution(deviceAddress, TEMPERATURE_PRECISION);
-    
-  }
+    //start timing until reboot
+    while (true)
+    {
+      dnsServer.processNextRequest();
+      server.handleClient();
 
-}
-
-void loop() {
-  
-  //if could not connect to access point
-  if (!connected) {
-
-    dnsServer.processNextRequest();
-    server.handleClient();
-
-  } else {
-    //will restart device if WiFi connection is lost
-    if (WiFi.status() != WL_CONNECTED) {
-      
-      if (millis() > reconnectTimer + 5000) {
-        WiFi.disconnect();
-        Serial.println("Connection lost");
-        Serial.println("Attempting to reconnect");
-        WiFi.begin(ssid, password);
-        int result = WiFi.waitForConnectResult();
-        
-        Serial.print("Connect Result: ");
-        Serial.println(result);
-
-        if (result == 3){
-          Serial.println("Reconnected");
-        }
-        
-        reconnectTimer = millis();
+      if (timer + timeout < millis())
+      {
+        Serial.println("restarting");
+        ESP.restart();
       }
-
-    } else {
-
-      if (millis() > sendTimer + 300000) {
-        sendData();
-        sendTimer = millis();
-      }
-
-      while (client.available()) {
-        String line = client.readStringUntil('\r');
-        Serial.print("Response: " + line);
-      }
-
     }
   }
+
+  Serial.print("Connected to: ");
+  Serial.println(ssid);
+
+  WiFi.mode(WIFI_STA);
+
+  sensors.begin();
+  sensors.getAddress(deviceAddress, 0);
+  sensors.setResolution(deviceAddress, TEMPERATURE_PRECISION);
 }
 
-void sendData() {
-  if (!client.connect(serverAddress, httpPort)) {
+void loop()
+{
+  //will restart device if WiFi connection is lost
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    ESP.restart();
+  }
+
+  if (millis() > sendTimer + 300000)
+  {
+    sendData();
+    sendTimer = millis();
+  }
+
+  while (client.available())
+  {
+    String line = client.readStringUntil('\r');
+    Serial.print("Response: " + line);
+  }
+}
+
+void sendData()
+{
+  if (!client.connect(serverAddress, httpPort))
+  {
     return;
   }
 
   boolean bad_reading = true;
   float temp = 0;
 
-  while (bad_reading == true) {
+  while (bad_reading == true)
+  {
     sensors.requestTemperatures();
     temp = sensors.getTempF(deviceAddress);
 
-    if (isnan(temp)) {
+    if (isnan(temp))
+    {
       bad_reading == true;
     }
-    else {
+    else
+    {
       bad_reading = false;
       break;
     }
@@ -187,37 +176,43 @@ void sendData() {
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + serverAddress + "\r\n" +
                "Connection: close\r\n\r\n");
-
 }
 
-void handleRoot() {
+void handleRoot()
+{
   server.send(200, "text/html", page_index);
 }
 
-void handleConfig() {
+void handleConfig()
+{
 
-  if (server.arg("password") != "" && server.arg("ssid") != "" && server.arg("name") != "" && server.arg("serverPassword") != "" && server.arg("serverAddress" != "")) {
+  if (server.arg("password") != "" && server.arg("ssid") != "" && server.arg("name") != "" && server.arg("serverPassword") != "" && server.arg("serverAddress" != ""))
+  {
 
     server.arg("ssid").toCharArray(ssid, sizeof(ssid) - 1);
     server.arg("password").toCharArray(password, sizeof(password) - 1);
     server.arg("name").toCharArray(sensorName, sizeof(sensorName) - 1);
     server.arg("serverPassword").toCharArray(serverPassword, sizeof(serverPassword) - 1);
     server.arg("serverAddress").toCharArray(serverAddress, sizeof(serverAddress) - 1);
-    
+
     saveConfig();
 
-    server.send(200, "text/html", "Config successful. Please reboot device.");
+    server.send(200, "text/html", "Config successful. Rebooting");
+
+    ESP.restart();
   }
 
   server.send(200, "text/html", "<script>window.onload = function() { window.location = \"/\"; }</script>");
 }
 
-void handleNotFound() {
+void handleNotFound()
+{
   server.send(404, "text/html", "404");
 }
 
 /** Store WLAN credentials to EEPROM */
-void saveConfig() {
+void saveConfig()
+{
   EEPROM.begin(512);
   EEPROM.put(0, ssid);
   EEPROM.put(0 + sizeof(ssid), password);
@@ -226,10 +221,10 @@ void saveConfig() {
   EEPROM.put(0 + sizeof(ssid) + sizeof(password) + sizeof(sensorName) + sizeof(serverPassword), serverAddress);
   EEPROM.commit();
   EEPROM.end();
-
 }
 
-void loadCredentials() {
+void loadCredentials()
+{
   EEPROM.begin(512);
   EEPROM.get(0, ssid);
   EEPROM.get(0 + sizeof(ssid), password);
